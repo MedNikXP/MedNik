@@ -191,6 +191,113 @@
         </nav>
     </header>
 
+    <main class="content">
+        <div class="alert success" id="successAlert">
+            Ваш вопрос успешно отправлен! Мы ответим вам в ближайшее время.
+        </div>
+        <div class="alert error" id="errorAlert">
+            Произошла ошибка при отправке вопроса. Пожалуйста, попробуйте позже.
+        </div>
+        
+        <form class="question-form" id="questionForm">
+            <div class="form-group">
+                <label for="name" class="form-label">Твоё Имя</label>
+                <input type="text" id="name" name="name" class="form-input" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="question" class="form-label">Твой вопрос</label>
+                <textarea id="question" name="question" class="form-textarea" required></textarea>
+            </div>
+            
+            <button type="submit" class="submit-button" id="submitButton">
+                Отправить вопрос
+                <span class="loading-spinner" id="loadingSpinner"></span>
+            </button>
+        </form>
+    </main>
+
+    <script>
+        // Функция для отправки вопроса в Telegram
+        async function sendToTelegram(data) {
+            const BOT_TOKEN = '8112603781:AAHO6bUTm-lzIdjq0f48n5l792-SRSSYHKY'; // Замените на ваш токен бота
+            const CHAT_ID = '6347487988'; // Замените на ваш ID чата
+            
+            const message = `
+                Новый вопрос!
+                
+                Имя: ${data.name}
+                Вопрос: ${data.question}
+            `;
+
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: message,
+                    parse_mode: 'HTML'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to send message to Telegram');
+            }
+
+            return response.json();
+        }
+
+        // Обработчик отправки формы
+        document.getElementById('questionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submitButton');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+            
+            // Собираем данные формы
+            const formData = {
+                name: document.getElementById('name').value,
+                question: document.getElementById('question').value
+            };
+            
+            // Показываем загрузку
+            submitButton.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+            successAlert.style.display = 'none';
+            errorAlert.style.display = 'none';
+            
+            try {
+                await sendToTelegram(formData);
+                
+                // Показываем успешное сообщение
+                successAlert.style.display = 'block';
+                document.getElementById('questionForm').reset();
+            } catch (error) {
+                // Показываем сообщение об ошибке
+                errorAlert.style.display = 'block';
+                console.error('Error:', error);
+            } finally {
+                // Скрываем загрузку
+                submitButton.disabled = false;
+                loadingSpinner.style.display = 'none';
+            }
+        });
+
+        // Мобильное меню
+        function toggleMenu() {
+            const navList = document.querySelector('.nav-list');
+            const burger = document.querySelector('.burger');
+            navList.classList.toggle('active');
+            burger.classList.toggle('active');
+        }
+    </script>
+
     <script>
         function toggleMenu() {
             const navList = document.querySelector('.nav-list');
